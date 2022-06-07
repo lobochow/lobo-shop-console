@@ -1,29 +1,30 @@
 <template>
     <div class="root">
-        <el-table class="c1Table" :data="categorys.c1s" style="width: 100%">
+        <el-table class="c1Table" :data="c1s" style="width: 100%">
             <el-table-column type="index" label="大类序号" width="120">
             </el-table-column>
             <el-table-column label="一级分类">
                 <template slot-scope="scope">
-                    <el-tag closable @close="deleteC1(scope.$index, index)" type="info" v-for="(item, index) in scope.row.c1names" :key="index">{{item}}</el-tag>
-                    <editableTag size="small" @updateData="value => updateC1(scope.$index, value)">添加</editableTag>
+                    <el-tag closable @close="updateC1('delete', scope.$index, 'c1names', index)" type="info" v-for="(item, index) in scope.row.c1names" :key="index">{{item}}</el-tag>
+                    <editableTag size="small" @updateData="value => updateC1('add', scope.$index, 'c1names', value)">添加</editableTag>
                 </template>
             </el-table-column>
             <el-table-column label="快速入口">
                 <template slot-scope="scope">
-                    <el-tag closable @close="deleteQuick(scope.$index, index)" type="info" v-for="(quick, index) in scope.row.quickEnter" :key="index">{{quick}}</el-tag>
-                    <editableTag size="small" @updateData="value => updateQuick(scope.$index, value)">添加</editableTag>
+                    <el-tag closable @close="updateC1('delete', scope.$index, 'quickEnter', index)" type="info" v-for="(quick, index) in scope.row.quickEnter" :key="index">{{quick}}</el-tag>
+                    <editableTag size="small" @updateData="value => updateC1('add', scope.$index, 'quickEnter', value)">添加</editableTag>
                 </template>
             </el-table-column>
             <el-table-column label="操作">
-                <template>
-                    <el-tag type="danger">删除</el-tag>
+                <template slot-scope="scope">
+                    <el-tag type="danger" @click="deleteC1(scope.$index)">删除</el-tag>
                 </template>
             </el-table-column>
         </el-table>
+        <el-button type="primary" size="small" @click="addC1">添加一级分类</el-button>
 
         <p>
-            选择分类1：<el-select v-model="selectedIndex.c1" size="small">
+            选择分类1：<el-select v-model="selectedIndex" size="small">
                 <el-option :value="index+1" v-for="(c1, index) in categorys.c1s.length" :key="index">{{index+1}}</el-option>
             </el-select>
         </p>
@@ -35,17 +36,17 @@
             </el-table-column>
             <el-table-column label="三级分类">
                 <template slot-scope="scope">
-                    <el-tag closable @close="deleteC3" type="info" v-for="(c3, index) in scope.row.c3s" :key="index">{{c3}}</el-tag>
-                    <editableTag size="small" @updateData="updateC3">添加</editableTag>
+                    <el-tag closable type="info" v-for="(c3, index) in scope.row.c3s" :key="index">{{c3.c3name}}</el-tag>
+                    <editableTag size="small" @updateData="value => updateC3('add',scope.$index, value)">添加</editableTag>
                 </template>
             </el-table-column>
         </el-table>
-        <editableTag size="small" @updateData="updateC2">添加二级分类</editableTag>
+        <editableTag size="small" @updateData="value => updateC2('add', value) ">添加二级分类</editableTag>
     </div>
 </template>
 
 <script>
-import { request } from '@/api/index.js'
+import { postUpdateC1, getCategory_1, deleteCategory_1, getCategory_2, postUpdateC2, deleteCategory_2, postUpdateC3 } from '@/api/index.js'
 import editableTag from '@/components/editableTag'
 
 export default {
@@ -53,10 +54,7 @@ export default {
     components: { editableTag },
     data() {
         return {
-            selectedIndex: {
-                c1: 1,
-                c2: 1
-            },
+            selectedIndex: 1,
             categorys: {
                 c1s: [
                     {
@@ -97,41 +95,88 @@ export default {
                         ]
                     }
                 ],
-            }
-        }
-    },
-    computed: {
-        c2s() {
-            return this.categorys.c1s[this.selectedIndex.c1 - 1].c2s;
+            },
+            c1s: [],
+            c2s: []
         }
     },
     methods: {
         handleClose(tag) {
             this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
         },
-        updateC1(index, value) {
-            this.categorys.c1s[index].c1names.push(value);
+        reqCategory_1() {
+            this.c1s = getCategory_1();
         },
-        deleteC1(rowIndex, valueIndex) {
-            this.categorys.c1s[rowIndex].c1names.splice(valueIndex, 1);
+        addC1() {
+            postUpdateC1({
+                c1_names: [],
+                quickEnter: []
+            });
+
+            this.updateAll();
         },
-        updateC2(value) {
-            this.categorys.c1s[this.selectedIndex.c1-1].c2s.push({c2name: value });
+        updateC1(flag, index, attrname, valueOrIndex) {
+            if (flag == 'add') this.c1s[index][attrname].push(valueOrIndex);
+            if (flag == 'delete') this.c1s[index][attrname].splice(valueOrIndex, 1);
+            postUpdateC1(this.c1s[index]);
+
+            this.updateAll();
+        },
+        deleteC1(index) {
+            deleteCategory_1(this.c1s[index]);
+
+            this.updateAll();
+
+        },
+        reqCategory_2(c1_id) {
+            this.c2s = getCategory_2(c1_id);
+        },
+        updateC2(flag, value) {
+            if (flag == 'add') {
+                postUpdateC2({
+                    c2name: value,
+                    c1_id: this.c1s[this.selectedIndex - 1]._id
+                });
+            }
+
+            this.updateAll();
         },
         deleteC2(rowIndex) {
-            this.categorys.c1s[this.selectedIndex.c1-1].c2s.splice(rowIndex, 1);
+            deleteCategory_2(this.c2s[rowIndex]);
+            this.updateAll();
         },
-        updateC3(value) {
-            this.categorys.c1s[this.selectedIndex.c1-1].c2s[this.selectedIndex.c2-1].c3s.push(value);
+        updateC3(flag, c2Index, value){
+            if(flag == 'add'){
+                postUpdateC3({
+                    c2_id: this.c2s[c2Index]._id,
+                    c3name: value
+                })
+            }
+
+            this.updateAll();
         },
-        deleteC3(rowIndex) {
-            this.categorys.c1s[this.selectedIndex.c1-1].c2s[this.selectedIndex.c2-1].c3s.splice(rowIndex, 1);
-        },
-        updateQuick(index, value) {
-            this.categorys.c1s[index].quickEnter.push(value);
-        },
-        deleteQuick(rowIndex, valueIndex) {
-            this.categorys.c1s[rowIndex].quickEnter.splice(valueIndex, 1);
+        updateAll(){
+            this.reqCategory_1();
+            this.reqCategory_2(this.$route.query.c1_id);
+        }
+    },
+    watch: {
+        selectedIndex(newValue){
+            this.reqCategory_2(this.c1s[newValue -1]._id);
+            this.$router.push({
+                path: '/category',
+                query: {
+                    c1_id: this.c1s[newValue -1]._id
+                }
+            })
+        }
+    },
+    mounted() {
+        this.reqCategory_1();
+        if (!this.$route.query.c1_id) {
+            this.reqCategory_2(this.c1s[this.selectedIndex -1]._id);
+        }else{
+            this.reqCategory_2(this.$route.query.c1_id);
         }
     }
 }

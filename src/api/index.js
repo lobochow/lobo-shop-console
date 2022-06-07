@@ -19,42 +19,44 @@ export function request(options){
     return result;
 }
 
-export const getCategoryList = () => request({
+export const getCategory_1 = () => request({
     method: 'get',
     url: '/v1/category_1'
 });
 
-export const getCartInfo = () => request({
-    method: 'get',
-    url: '/v1/getCart'
+export const postUpdateC1 = (body) => request({
+    method: 'post',
+    url: '/v1/category_1',
+    body
 });
 
-export const getHomeSwiperImg = () => request({
-    method: 'get',
-    url: '/v1/homeSwiper'
+export const deleteCategory_1 = (body) => request({
+    method: 'delete',
+    url: '/v1/category_1',
+    body
 });
 
-export const getSpuList = () => request({
+//c2
+export const getCategory_2 = (c1_id) => request({
     method: 'get',
-    url: '/v1/getSpu'
+    url: `/v1/category_2?c1_id=${c1_id}`
 });
 
-export const reqSkuInfo = () => request({
-    method: 'get',
-    url: '/v1/getSkuInfo'
-})
+export const postUpdateC2 = (body) => request({
+    method: 'post',
+    url: '/v1/category_2',
+    body
+});
 
-export const reqCartInfo = () => request({
-    method: 'get',
-    url: '/v1/getCartInfo'
-})
+export const deleteCategory_2 = (body) => request({
+    method: 'delete',
+    url: '/v1/category_2',
+    body
+});
 
-export const reqPayBillInfo = () => request({
-    method: 'get',
-    url: '/v1/getPayBillInfo'
-})
-
-export const reqBillRecord = () => request({
-    method: 'get',
-    url: '/v1/getBillRecordInfo'
-})
+//c3
+export const postUpdateC3 = (body) => request({
+    method: 'post',
+    url: '/v1/category_3',
+    body
+});
