@@ -6,7 +6,8 @@ module.exports = {
             alias: {
                 '@': path.resolve(__dirname, 'src')
             }
-        }
+        },
+        devtool: 'eval-source-map'
     },
     devServer:{
         proxy: {

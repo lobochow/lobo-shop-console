@@ -71,3 +71,15 @@ export const deleteUpdateC3 = (body) => request({
     url: '/v1/category_3',
     body
 });
+
+//homeSwiper
+export const getHomeSwiper = () => request({
+    method: 'get',
+    url: '/v1/homeSwiper'
+});
+
+export const deleteHomeSwiper = (body) => request({
+    method: 'delete',
+    url: '/v1/homeSwiper',
+    body
+})
