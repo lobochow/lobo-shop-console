@@ -19,6 +19,11 @@ export function request(options){
     return result;
 }
 
+export const getCategorys = () => request({
+    method: 'get',
+    url: '/v1/categorys'
+});
+
 export const getCategory_1 = () => request({
     method: 'get',
     url: '/v1/category_1'
@@ -57,6 +62,12 @@ export const deleteCategory_2 = (body) => request({
 //c3
 export const postUpdateC3 = (body) => request({
     method: 'post',
+    url: '/v1/category_3',
+    body
+});
+
+export const deleteUpdateC3 = (body) => request({
+    method: 'delete',
     url: '/v1/category_3',
     body
 });
