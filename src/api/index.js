@@ -83,3 +83,38 @@ export const deleteHomeSwiper = (body) => request({
     url: '/v1/homeSwiper',
     body
 })
+
+export const getSKU = () => request({
+    method: 'get',
+    url: '/v1/sku'
+})
+
+export const postSKU = (body) => request({
+    method: 'post',
+    url: '/v1/sku',
+    body
+})
+
+export const deleteSKU = (body) => request({
+    method: 'delete',
+    url: '/v1/sku',
+    body
+})
+
+export const postSPU = (body) => request({
+    method: 'post',
+    url: '/v1/spu',
+    body
+})
+
+export const deleteSPU = (body) => request({
+    method: 'delete',
+    url: '/v1/spu',
+    body
+})
+
+export const deleteSPUSwiper = (body) => request({
+    method: 'delete',
+    url: '/v1/spuSwiper',
+    body
+})

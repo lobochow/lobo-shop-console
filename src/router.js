@@ -4,6 +4,7 @@ Vue.use(VueRouter);
 
 import Category from "@/views/category.vue"
 import homeSwiper from '@/views/homeSwiper'
+import editSku from '@/views/editSku'
 
 export default new VueRouter({
 	routes: [
@@ -17,10 +18,15 @@ export default new VueRouter({
 			path: '/homeSwiper',
 			component: homeSwiper
 		},
+        {
+            name: 'editSku',
+			path: '/editSku',
+			component: editSku
+		},
 		//主页重定向
 		{
 			path: '/',
-			redirect: 'homeSwiper'
+			redirect: 'editSku'
 		}
 	]
 })
