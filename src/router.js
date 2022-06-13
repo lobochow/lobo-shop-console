@@ -4,7 +4,7 @@ Vue.use(VueRouter);
 
 import Category from "@/views/category.vue"
 import homeSwiper from '@/views/homeSwiper'
-import editSku from '@/views/editSku'
+import editSku from '@/views/editSku/index'
 
 export default new VueRouter({
 	routes: [
