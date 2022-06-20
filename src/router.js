@@ -26,7 +26,7 @@ export default new VueRouter({
 		//主页重定向
 		{
 			path: '/',
-			redirect: 'editSku'
+			redirect: 'category'
 		}
 	]
 })

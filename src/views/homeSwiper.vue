@@ -36,11 +36,11 @@ export default {
         },
         async reqSwipers() {
             this.swipers = await getHomeSwiper();
-            this.swipers.forEach(pic => {
-                let forName = pic.picUrl.split('/');
-                pic.name = forName[forName.length -1];
-                pic.url = pic.picUrl;
-            })
+            // this.swipers.forEach(pic => {
+            //     let forName = pic.picUrl.split('/');
+            //     pic.name = forName[forName.length -1];
+            //     pic.url = pic.picUrl;
+            // })
         }
     },
     mounted() {

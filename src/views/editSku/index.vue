@@ -1,30 +1,40 @@
 <template>
     <div class="root">
         <el-card class="showSku">
-            <el-table :data="skuList" style="width: 100%">
-                <el-table-column prop="description" label="SKU">
+            <el-table :data="skuList" style="width: 100%" border="">
+                <el-table-column prop="description" label="SKU" align="center">
                 </el-table-column>
 
-                <el-table-column label="SPU">
-                    <template slot-scope="scope">
-                        <el-tag closable @close="reqDeleteSPU(spu)" type="info" v-for="(spu, index) in scope.row.spuList" :key="index" @click="editSPU(spu)">
-                            {{spu.shortDescription}}</el-tag>
-                        <el-button type="success" @click="addSpu" size="mini">添加SPU</el-button>
+                <el-table-column align="center" label="特征属性">
+                    <template slot-scope="{row}">
+                        <el-tag type="info" v-for="attr in row.attrList" :key="attr" style="margin-right: 10px">{{attr}}
+                        </el-tag>
                     </template>
                 </el-table-column>
 
-                <el-table-column label="操作">
+                <el-table-column label="SPU" align="center">
+                    <template slot-scope="scope">
+                        <el-tag closable @close="reqDeleteSPU(spu)" type="info"
+                                v-for="(spu, index) in scope.row.spuList" :key="index" @click="editSPU(spu, scope.row)">
+                            {{spu.shortDescription}}</el-tag>
+                        <el-button type="success" @click="addSpu(scope.row)" size="mini">添加SPU</el-button>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="操作" align="center">
                     <template slot-scope="scope">
                         <el-button size='small' type="warning" @click="editSku(scope.row)">编辑</el-button>
                         <el-button size='small' type="danger" @click="reqDeleteSKU(scope.row)">删除</el-button>
                     </template>
                 </el-table-column>
             </el-table>
-            <el-button type="primary" @click="addSku">添加SKU</el-button>
+            <el-button type="primary" @click="addSku" style="margin-top:10px">添加SKU</el-button>
 
-            <addSKU :visible.sync="skuFormVisible" :categorys="categorys" :skuInfo="skuInfo" @updateSkuInfo="reqSKUInfo" ></addSKU>
+            <addSKU :visible.sync="skuFormVisible" :categorys="categorys" :skuInfo="skuInfo"
+                    @updateSkuInfo="reqSKUInfo"></addSKU>
 
-            <spuForm :visible.sync="spuFormVisible" :spuInfo="spuInfo"></spuForm>
+            <spuForm :visible.sync="spuFormVisible" :spuInfo="spuInfo" :skuInfo="skuInfo" :showComponent="showSpuForm"
+                     @updateSkuInfo="reqSKUInfo"></spuForm>
         </el-card>
     </div>
 </template>
@@ -46,7 +56,9 @@ export default {
 
             skuList: [],
 
-            skuInfo: {},
+            skuInfo: {
+                attrList: []
+            },
             spuInfo: {},
 
             spuFormVisible: false,
@@ -71,51 +83,55 @@ export default {
         },
 
         //SKU相关
-        showSkuDialog(){
+        showSkuDialog() {
             this.skuFormVisible = true;
         },
-        addSku(){
-            this.skuInfo = {};
+        addSku() {
+            this.skuInfo = {attrList: []};
             this.showSkuDialog();
         },
-        editSku(skuInfo){
+        editSku(skuInfo) {
             this.skuInfo = this.skuInfoFormat(skuInfo);
             this.showSkuDialog();
         },
-        async reqSKUInfo(){
+        async reqSKUInfo() {
             let result = await getSKU();
-            if(result.code == 200){
+            if (result.code == 200) {
                 this.skuList = result.data;
-            }else{
+            } else {
                 this.$message({
                     message: '获取sku列表失败',
                     type: 'error'
                 })
             }
         },
-        skuInfoFormat(skuInfo){
-            let formattedSkuInfo = {};
-            let {description, _id} = skuInfo;
+        skuInfoFormat(skuInfo) {
 
-            formattedSkuInfo._id = _id;
-            formattedSkuInfo.description = description;
+            let { description, _id, attrList } = skuInfo;
+
+            let formattedSkuInfo = {
+                description,
+                _id,
+                attrList
+            };
+
             formattedSkuInfo.category_ids = [];
-
-            for(let attr in skuInfo){
-                if(/c._id/.test(attr)){
+            for (let attr in skuInfo) {
+                if (/c._id/.test(attr)) {
                     formattedSkuInfo.category_ids.push(skuInfo[attr]);
                 }
             }
 
             return formattedSkuInfo;
         },
-        async reqDeleteSKU(skuInfo){
+        async reqDeleteSKU(skuInfo) {
             let result = await deleteSKU(skuInfo);
             if (result.code == 200) {
-                console.log(skuInfo);
+                //删除子spu
                 skuInfo.spuList.forEach(spu => {
                     this.reqDeleteSPU(spu);
                 });
+                this.reqSKUInfo();
                 this.$message({
                     message: '删除sku成功',
                     type: 'success'
@@ -130,16 +146,20 @@ export default {
 
 
         //spu相关
-        showSpuForm(){
+        showSpuForm() {
             this.spuFormVisible = true;
         },
-        addSpu(){
-            this.spuInfo = {};
+        addSpu(skuInfo) {
+            let { _id } = skuInfo;
+
+            this.spuInfo = { sku_id: _id };
+            this.skuInfo = skuInfo;
+
             this.showSpuForm();
         },
         async reqAddSPU() {
             this.dialogVisible_addSPU = false;
-   
+
             let result = await postSPU({ ...this.form_spu, swipers: this.spuSwipers, sku_id: this.sku_id });
             if (result.code == 200) {
                 this.$message({
@@ -157,23 +177,25 @@ export default {
             this.dialogImageUrl = file.url;
             this.dialogVisible = true;
         },
-        showSPUAdd(sku_id){
+        showSPUAdd(sku_id) {
             this.dialogVisible_addSPU = true;
             this.sku_id = sku_id;
         },
-        spuInfoFormat(spuInfo){
+        spuInfoFormat(spuInfo) {
             return spuInfo;
         },
-        editSPU(spuInfo){
+        editSPU(spuInfo, skuInfo) {
             let formattedSpuInfo = this.spuInfoFormat(spuInfo);
 
             this.spuInfo = formattedSpuInfo;
+            this.skuInfo = skuInfo;
 
             this.showSpuForm();
         },
-        async reqDeleteSPU(spuInfo){
+        async reqDeleteSPU(spuInfo) {
             let result = await deleteSPU(spuInfo);
             if (result.code == 200) {
+                this.reqSKUInfo();
                 this.$message({
                     message: '删除spu成功',
                     type: 'success'
@@ -185,9 +207,9 @@ export default {
                 });
             }
         },
-        handleRemoveSPUImg(file){
+        handleRemoveSPUImg(file) {
             console.log(file);
-            deleteSPUSwiper({filename: file.response.name});
+            deleteSPUSwiper({ filename: file.response.name });
         }
     },
     mounted() {
