@@ -1,39 +1,50 @@
 <template>
     <div class="spuForm">
-        <el-dialog title="添加SPU" :visible.sync="visible" :before-close="handleClose">
+        <el-dialog title="添加Spu" :visible.sync="visible" :before-close="handleClose">
 
-            <el-form ref="form_spu" :model="spuEditInfo" label-width="80px">
-                <el-form-item label="短描述">
-                    <el-input v-model="spuEditInfo.shortDescription"></el-input>
-                </el-form-item>
-                <el-form-item label="长描述">
-                    <el-input v-model="spuEditInfo.longDescription"></el-input>
+            <el-form ref="form_spu" :model="spuEditInfo" label-width="100px">
+                <el-form-item label="价格（元）">
+                    <el-input v-model="spuEditInfo.price"></el-input>
                 </el-form-item>
                 <el-form-item label="重量(kg)">
                     <el-input v-model="spuEditInfo.weight"></el-input>
                 </el-form-item>
-                <el-form-item label="特征属性">
-                    <el-input placeholder="请输入内容" v-model="spuAttrValue" class="input-with-select" :disabled="disableAttrAdd">
+                <el-form-item label="销售属性">
+                    <el-input placeholder="请输入内容" v-model="spuAttrValue" class="input-with-select"
+                              :disabled="disableAttrAdd">
                         <el-select v-model="spuAttrName" slot="prepend" placeholder="请选择" :disabled="disableAttrAdd">
                             <el-option :label="attrName" :value="attrName" v-for="(attrName, index) in optionalAttr"
                                        :key="index"></el-option>
                         </el-select>
-                        <el-button slot="append" @click="addSpuAttr" :disabled="disableAttrAdd || !spuAttrName || !spuAttrValue">添加</el-button>
+                        <el-button slot="append" @click="addSpuAttr"
+                                   :disabled="disableAttrAdd || !spuAttrName || !spuAttrValue">添加</el-button>
                     </el-input>
                 </el-form-item>
-                <el-table :data="spuEditInfo.attrList" style="margin-bottom: 20px">
-                    <el-table-column label="特征" prop="attrName"></el-table-column>
-                    <el-table-column label="属性值">
-                        <template slot-scope="{row, $index}">
-                            <span v-show="!spuAttrEditStatus[$index]">{{row.attrValue}}</span>
-                            <input type="text" v-model="row.attrValue" v-show="spuAttrEditStatus[$index]" :ref="`attrInput${$index}`" style="width: 65%">
+
+                <el-table :data="spuEditInfo.attrList" style="margin-bottom: 20px" row-class-name="spuAttrRow">
+                    <el-table-column header-align="center" align="center" label="拖动">
+                        <template>
+                            <i class="iconfont icon-tuodongtupian dragIcon"></i>
                         </template>
                     </el-table-column>
-                    <el-table-column
-                        label="操作" >
+                    <el-table-column label="销售属性">
+                        <template slot-scope="{row}">
+                            <span class="selectableCotent">{{row.attrName}}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="属性值">
                         <template slot-scope="{row, $index}">
-                            <el-button type="primary" size="mini" v-show="spuAttrEditStatus[$index]" @click="comfirmEditSpuAttr(row, $index)">确定</el-button>
-                            <el-button type="warning" size="mini" @click="editAttr($index)" v-show="!spuAttrEditStatus[$index]">编辑</el-button>
+                            <span v-show="!spuAttrEditStatus[$index]" class="selectableCotent">{{row.attrValue}}</span>
+                            <input type="text" v-model="row.attrValue" v-show="spuAttrEditStatus[$index]"
+                                   :ref="`attrInput${$index}`" style="width: 65%">
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="操作">
+                        <template slot-scope="{row, $index}">
+                            <el-button type="primary" size="mini" v-show="spuAttrEditStatus[$index]"
+                                       @click="comfirmEditSpuAttr(row, $index)">确定</el-button>
+                            <el-button type="warning" size="mini" @click="editAttr($index)"
+                                       v-show="!spuAttrEditStatus[$index]">编辑</el-button>
                             <el-button type="danger" size="mini" @click="deleteAttr($index)">删除</el-button>
                         </template>
                     </el-table-column>
@@ -52,7 +63,7 @@
             </el-form>
 
             <span slot="footer" class="dialog-footer">
-                <el-button @click="hideDialog">取 消</el-button>
+                <el-button @click="cancelEdit">取 消</el-button>
                 <el-button type="primary" @click="reqAddSpu">确 定</el-button>
             </span>
         </el-dialog>
@@ -77,8 +88,7 @@ export default {
             spuSwipers: [],
             spuEditInfo: {
                 sku_id: '',
-                longDescription: '',
-                shortDescription: '',
+                price: 0,
                 weight: 0,
                 swipers: [],
                 attrList: []
@@ -87,14 +97,17 @@ export default {
 
             spuAttrName: '',
             spuAttrValue: '',
-            spuAttrEditStatus: []
+            spuAttrEditStatus: [],
+
+            dragSelectIndex: '',
+            dragSourceItem: null
         }
     },
-    computed:{
-        optionalAttr(){
+    computed: {
+        optionalAttr() {
             return this.skuInfo?.attrList?.filter(attrName => !this.spuEditInfo.attrList.some(spuAttr => spuAttr.attrName == attrName));
         },
-        disableAttrAdd(){
+        disableAttrAdd() {
             return this.optionalAttr?.length === 0;
         }
     },
@@ -102,17 +115,17 @@ export default {
         spuInfo(newValue) {
             this.spuEditInfo = {
                 sku_id: '',
-                longDescription: '',
-                shortDescription: '',
                 weight: 0,
                 swipers: [],
                 attrList: []
             };
             Object.assign(this.spuEditInfo, newValue);
             this.swipers = [...this.spuEditInfo.swipers];
+
+            this.dragInit();
         },
-        "spuEditInfo.attrList": function(newValue){
-            for(let i = 0; i < this.spuEditInfo.attrList.length; i++) {
+        "spuEditInfo.attrList": function (newValue) {
+            for (let i = 0; i < this.spuEditInfo.attrList.length; i++) {
                 this.spuAttrEditStatus.push(false);
             }
         }
@@ -121,7 +134,7 @@ export default {
         handleClose(done) {
             this.$confirm('确认关闭？')
                 .then(_ => {
-                    this.hideDialog();
+                    this.cancelEdit();
                     //done();
                 })
                 .catch(_ => { });
@@ -140,25 +153,32 @@ export default {
             let picIndex = this.findPic(file, this.spuEditInfo.swipers);
             this.deletePic(picIndex, this.spuEditInfo.swipers);
         },
-        hideDialog() {
-            this.$emit('update:visible', false);
+        cancelUpdateSwiper() {
             let editSwiperLength = this.spuEditInfo.swipers.length;
             let showSwiperLength = this.swipers.length;
-            for(let i = 0; i < editSwiperLength; i++) {
+            for (let i = 0; i < editSwiperLength; i++) {
                 let editSwiperName = this.spuEditInfo.swipers[i].name;
                 let isInEdit = false;
-                for(let j = 0; j < showSwiperLength; j++) {
-                    if(editSwiperName === this.swipers[j].name) {
+                for (let j = 0; j < showSwiperLength; j++) {
+                    if (editSwiperName === this.swipers[j].name) {
                         isInEdit = true;
                         break;
                     }
                 }
 
-                if(!isInEdit) {
+                if (!isInEdit) {
                     deleteSPUSwiper(this.spuEditInfo.swipers[i]);
                     console.log('删除照片:' + this.spuEditInfo.swipers[i].name);
                 }
             }
+        },
+        hideDialog() {
+            this.$emit('update:visible', false);
+        },
+        cancelEdit() {
+            this.hideDialog();
+            this.cancelUpdateSwiper();
+            this.initData();
         },
         picUploadSuccess(respones, file, fileList) {
             this.spuEditInfo.swipers.push(respones);
@@ -180,7 +200,7 @@ export default {
                     message: '添加Spu成功',
                     type: 'success'
                 })
-                this.hideDialog();
+                this.$emit('update:visible', false);
                 this.$emit('updateSkuInfo');
             } else {
                 this.$message({
@@ -196,21 +216,104 @@ export default {
             });
 
             this.spuAttrName = this.optionalAttr?.[0] ?? '';
-            this.spuAttrValue = this.disableAttrAdd ? '无额外属性' : '请输入';
+            this.spuAttrValue = this.disableAttrAdd ? '无额外属性' : '';
         },
-        editAttr(index){
-            this.spuAttrEditStatus.splice(index,1,true);
-            this.$nextTick( () => {
+        editAttr(index) {
+            this.spuAttrEditStatus.splice(index, 1, true);
+            this.$nextTick(() => {
                 this.$refs[`attrInput${index}`].focus();
             })
         },
-        deleteAttr(index){
+        deleteAttr(index) {
             this.spuEditInfo.attrList.splice(index, 1);
         },
-        comfirmEditSpuAttr(row, index){
-            this.spuAttrEditStatus.splice(index,1,false);
+        comfirmEditSpuAttr(row, index) {
+            this.spuAttrEditStatus.splice(index, 1, false);
+        },
+        initData() {
+            let originData = {
+                dialogVisible: false,
+
+                dialogVisible_spuSwiper: false,
+                dialogImageUrl: '',
+
+                spuSwipers: [],
+                spuEditInfo: {
+                    sku_id: '',
+                    price: 0,
+                    weight: 0,
+                    swipers: [],
+                    attrList: []
+                },
+                swipers: [],
+
+                spuAttrName: '',
+                spuAttrValue: '',
+                spuAttrEditStatus: []
+            };
+
+            Object.assign(this, originData);
+        },
+        dragInit() {
+            this.$nextTick(() => {
+                let spuAttrRows = document.querySelectorAll('.spuAttrRow');
+                spuAttrRows.forEach((row, index) => {
+                    row.setAttribute('draggable', 'true');
+
+                    //文字可选
+                    let spans = row.querySelectorAll('.selectableCotent');
+                    spans.forEach(span => {
+                        span.style.userSelect = 'text';
+                    })
+
+                    row.addEventListener('mousedown', e => {
+                        this.dragSourceItem = e.target;
+                    })
+
+                    row.addEventListener('dragstart', e => {
+                        if (this.dragSourceItem.classList.contains('dragIcon')) {
+                            e.dataTransfer.dropEffect = 'move';
+                            this.dragSelectIndex = index;
+                        } else {
+                            e.preventDefault();
+                        }
+
+                    }, false);
+
+                    row.addEventListener('dragenter', e => {
+                        e.preventDefault();
+                        if (!e.currentTarget.classList.contains('dropRow')) {
+
+                            spuAttrRows.forEach(row => {
+                                row.classList.remove('dropRow');
+                            })
+                            e.currentTarget.classList.add('dropRow');
+
+                            let attrList = this.spuEditInfo.attrList;
+
+                            let removeAttrRow = attrList.splice(this.dragSelectIndex, 1)[0];
+
+                            attrList.splice(index, 0, removeAttrRow);
+
+                            this.dragSelectIndex = index;
+                        }
+                    })
+
+                    row.addEventListener('dragover', e => {
+                        e.preventDefault();
+                        e.dataTransfer.effectAllowed = 'move';
+                    })
+
+                    row.addEventListener('dragend', e => {
+                        spuAttrRows.forEach(row => {
+                            row.classList.remove('dropRow');
+                        })
+                    })
+                })
+            })
         }
     }
+
 }
 </script>
 
@@ -220,5 +323,10 @@ export default {
 }
 .input-with-select .el-input-group__prepend {
     background-color: #fff;
+}
+
+::v-deep .spuAttrRow.dropRow {
+    color: white;
+    background-color: rgb(118, 184, 238);
 }
 </style>

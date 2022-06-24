@@ -2,33 +2,33 @@
     <div class="root">
         <el-card class="showSku">
             <el-table :data="skuList" style="width: 100%" border="">
-                <el-table-column prop="description" label="SKU" align="center">
+                <el-table-column prop="description" label="Sku" align="center" width="100px">
                 </el-table-column>
 
-                <el-table-column align="center" label="特征属性">
+                <el-table-column align="center" label="销售属性">
                     <template slot-scope="{row}">
-                        <el-tag type="info" v-for="attr in row.attrList" :key="attr" style="margin-right: 10px">{{attr}}
+                        <el-tag type="info" v-for="attr in row.attrList" :key="attr" style="margin: 0px 10px 10px 0px">{{attr}}
                         </el-tag>
                     </template>
                 </el-table-column>
 
-                <el-table-column label="SPU" align="center">
+                <el-table-column label="Spu" align="center">
                     <template slot-scope="scope">
-                        <el-tag closable @close="reqDeleteSPU(spu)" type="info"
+                        <el-tag closable @close="reqDeleteSPU(spu)" type="info" style="margin: 0px 10px 10px 0px"
                                 v-for="(spu, index) in scope.row.spuList" :key="index" @click="editSPU(spu, scope.row)">
-                            {{spu.shortDescription}}</el-tag>
-                        <el-button type="success" @click="addSpu(scope.row)" size="mini">添加SPU</el-button>
+                            {{spu.attrList.map(item => item.attrValue).join('-')}}</el-tag>
+                        <el-button type="success" @click="addSpu(scope.row)" size="mini">添加Spu</el-button>
                     </template>
                 </el-table-column>
 
-                <el-table-column label="操作" align="center">
+                <el-table-column label="操作" align="center" width="150px">
                     <template slot-scope="scope">
                         <el-button size='small' type="warning" @click="editSku(scope.row)">编辑</el-button>
                         <el-button size='small' type="danger" @click="reqDeleteSKU(scope.row)">删除</el-button>
                     </template>
                 </el-table-column>
             </el-table>
-            <el-button type="primary" @click="addSku" style="margin-top:10px">添加SKU</el-button>
+            <el-button type="primary" @click="addSku" style="margin: 10px 0px 0px 0px">添加Sku</el-button>
 
             <addSKU :visible.sync="skuFormVisible" :categorys="categorys" :skuInfo="skuInfo"
                     @updateSkuInfo="reqSKUInfo"></addSKU>
@@ -88,6 +88,7 @@ export default {
         },
         addSku() {
             this.skuInfo = {attrList: []};
+            
             this.showSkuDialog();
         },
         editSku(skuInfo) {
@@ -155,6 +156,7 @@ export default {
             this.spuInfo = { sku_id: _id };
             this.skuInfo = skuInfo;
 
+        
             this.showSpuForm();
         },
         async reqAddSPU() {
@@ -182,7 +184,8 @@ export default {
             this.sku_id = sku_id;
         },
         spuInfoFormat(spuInfo) {
-            return spuInfo;
+            let formattedSpuInfo = {...spuInfo};
+            return formattedSpuInfo;
         },
         editSPU(spuInfo, skuInfo) {
             let formattedSpuInfo = this.spuInfoFormat(spuInfo);
