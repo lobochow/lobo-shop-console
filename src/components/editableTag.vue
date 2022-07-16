@@ -1,5 +1,5 @@
 <template>
-    <span>
+    <span class="editableTag">
         <el-input class="input-new-tag" ref="saveTagInput" v-if="inputVisible" v-model="inputValue" :size="$attrs.size" @keyup.enter.native="handleInputConfirm" @blur="handleInputConfirm">
         </el-input>
         <el-button v-else class="button-new-tag" :size="$attrs.size" @click="showInput">

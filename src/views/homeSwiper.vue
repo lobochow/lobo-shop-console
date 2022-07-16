@@ -1,7 +1,7 @@
 <template>
     <div class="root">
         首页轮播图
-        <el-upload action="http://127.0.0.1:8088/v1/homeSwiper" list-type="picture-card"
+        <el-upload action="/v1/homeSwiper" list-type="picture-card"
                    :on-preview="handlePictureCardPreview" :on-remove="handleRemove"
                    :file-list="swipers">
             <i class="el-icon-plus"></i>

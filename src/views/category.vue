@@ -1,11 +1,13 @@
 <template>
     <div class="root">
-        <el-table :data="categorys" style="width: 100%" row-key="_id" border :tree-props="{children: 'children', hasChildren: 'hasChildren'}">
+        <el-table :data="categorys" style="width: 100%" row-key="_id" border
+                  :tree-props="{children: 'children', hasChildren: 'hasChildren'}">
             <el-table-column prop="name" label="分类名">
             </el-table-column>
             <el-table-column label="操作">
                 <template scope="scope">
-                    <editableTag size='small' v-if="!scope.row.c2_id" @updateData="value => addCategory(scope.row, value)">添加</editableTag>
+                    <editableTag size='small' v-if="!scope.row.c2_id"
+                                 @updateData="value => addCategory(scope.row, value)">添加</editableTag>
                     <el-button type="warning" size="mini" @click="editCategory(scope.row)">编辑</el-button>
                     <el-button type="danger" size="mini" @click="deleteCate(scope.row)">删除</el-button>
                 </template>
@@ -22,12 +24,17 @@
                 <el-button type="primary" @click="updateCategory">确 定</el-button>
             </span>
         </el-dialog>
+        <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"
+                       :page-sizes="[5, 10, 15]" :page-size="pageSize" layout="prev, pager, next, jumper, sizes, total"
+                       :total="total">
+        </el-pagination>
     </div>
 </template>
 
 <script>
 import { postUpdateC1, deleteCategory_1, postUpdateC2, deleteCategory_2, postUpdateC3, deleteUpdateC3, getCategorys } from '@/api/index.js'
 import editableTag from '@/components/editableTag'
+import { Result } from 'element-ui'
 
 export default {
     name: 'category',
@@ -40,7 +47,10 @@ export default {
             c2s: [],
             editDialogVisible: false,
             editCateInfo: {},
-            name: ''
+            name: '',
+            currentPage: 1,
+            pageSize: 5,
+            total: 0
         }
     },
     methods: {
@@ -52,7 +62,13 @@ export default {
                 .catch(_ => { });
         },
         async reqCategorys() {
-            this.categorys = await getCategorys();
+            let result = await getCategorys({
+                currentPage: this.currentPage,
+                pageSize: this.pageSize
+            });
+
+            this.categorys = result.categorys;
+            this.total = result.count;
         },
         addCategory(row, value) {
             if (!row) {
@@ -101,6 +117,14 @@ export default {
             }
 
             this.reqCategorys();
+        },
+        handleSizeChange(val) {
+            this.pageSize = val;
+            this.reqCategorys();
+        },
+        handleCurrentChange(val) {
+            this.currentPage = val;
+            this.reqCategorys();
         }
     },
     watch: {
@@ -128,6 +152,11 @@ export default {
 .root {
     width: 100%;
     padding: 40px;
+
+    > .editableTag{
+        display: block;
+        margin: 20px 0px;
+    }
 }
 
 .c1Table {
@@ -137,5 +166,9 @@ export default {
 .cell > * {
     margin-right: 10px;
     margin-bottom: 10px;
+}
+
+.el-pagination {
+    text-align: center;
 }
 </style>

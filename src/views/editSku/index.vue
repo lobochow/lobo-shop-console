@@ -7,14 +7,15 @@
 
                 <el-table-column align="center" label="销售属性">
                     <template slot-scope="{row}">
-                        <el-tag type="info" v-for="attr in row.attrList" :key="attr" style="margin: 0px 10px 10px 0px">{{attr}}
+                        <el-tag type="info" v-for="attr in row.attrList" :key="attr" style="margin: 0px 10px 10px 0px">
+                            {{attr}}
                         </el-tag>
                     </template>
                 </el-table-column>
 
                 <el-table-column label="Spu" align="center">
                     <template slot-scope="scope">
-                        <el-tag closable @close="reqDeleteSPU(spu)" type="info" style="margin: 0px 10px 10px 0px"
+                        <el-tag closable @close="reqDeleteSPU(spu)" type="info" style="margin: 0px 10px 10px 0px" class="spu-el-tag"
                                 v-for="(spu, index) in scope.row.spuList" :key="index" @click="editSPU(spu, scope.row)">
                             {{spu.attrList.map(item => item.attrValue).join('-')}}</el-tag>
                         <el-button type="success" @click="addSpu(scope.row)" size="mini">添加Spu</el-button>
@@ -36,6 +37,11 @@
             <spuForm :visible.sync="spuFormVisible" :spuInfo="spuInfo" :skuInfo="skuInfo" :showComponent="showSpuForm"
                      @updateSkuInfo="reqSKUInfo"></spuForm>
         </el-card>
+
+        <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"
+                       :page-sizes="[5, 10, 15]" :page-size="pageSize" layout="prev, pager, next, jumper, sizes, total"
+                       :total="total">
+        </el-pagination>
     </div>
 </template>
 
@@ -62,7 +68,11 @@ export default {
             spuInfo: {},
 
             spuFormVisible: false,
-            skuFormVisible: false
+            skuFormVisible: false,
+
+            currentPage: 1,
+            pageSize: 5,
+            total: 0
 
         }
     },
@@ -70,7 +80,8 @@ export default {
 
 
         async reqCategorys() {
-            this.categorys = await getCategorys();
+            let result = await getCategorys();
+            this.categorys = result.categorys;
             this.categorys.forEach(item => {
                 item.name = item.c1names.join('/');
                 item.children.forEach(item => {
@@ -87,8 +98,8 @@ export default {
             this.skuFormVisible = true;
         },
         addSku() {
-            this.skuInfo = {attrList: []};
-            
+            this.skuInfo = { attrList: [] };
+
             this.showSkuDialog();
         },
         editSku(skuInfo) {
@@ -96,12 +107,17 @@ export default {
             this.showSkuDialog();
         },
         async reqSKUInfo() {
-            let result = await getSKU();
+            let { currentPage, pageSize } = this;
+            let result = await getSKU({
+                currentPage,
+                pageSize
+            });
             if (result.code == 200) {
-                this.skuList = result.data;
+                this.skuList = result.data.skuList;
+                this.total = result.data.count;
             } else {
                 this.$message({
-                    message: '获取sku列表失败',
+                    message: result.msg,
                     type: 'error'
                 })
             }
@@ -156,7 +172,7 @@ export default {
             this.spuInfo = { sku_id: _id };
             this.skuInfo = skuInfo;
 
-        
+
             this.showSpuForm();
         },
         async reqAddSPU() {
@@ -184,7 +200,7 @@ export default {
             this.sku_id = sku_id;
         },
         spuInfoFormat(spuInfo) {
-            let formattedSpuInfo = {...spuInfo};
+            let formattedSpuInfo = { ...spuInfo };
             return formattedSpuInfo;
         },
         editSPU(spuInfo, skuInfo) {
@@ -213,6 +229,16 @@ export default {
         handleRemoveSPUImg(file) {
             console.log(file);
             deleteSPUSwiper({ filename: file.response.name });
+        },
+
+        //分页器
+        handleSizeChange(val) {
+            this.pageSize = val;
+            this.reqSKUInfo();
+        },
+        handleCurrentChange(val) {
+            this.currentPage = val;
+            this.reqSKUInfo();
         }
     },
     mounted() {
@@ -226,5 +252,16 @@ export default {
 .root {
     padding: 40px;
     width: 100%;
+}
+
+.el-pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.spu-el-tag {
+    &:hover{
+        cursor: pointer;
+    }
 }
 </style>

@@ -53,10 +53,11 @@ export default {
 
 .el-menu {
     width: 200px;
-    height: 100vh;
+    min-height: 100vh;
 }
 
 #app {
     display: flex;
+    align-items: stretch;
 }
 </style>
